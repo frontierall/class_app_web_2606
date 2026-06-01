@@ -4,7 +4,7 @@
  * 배포 방법:
  * 1. script.google.com → 새 프로젝트
  * 2. 이 코드 붙여넣기
- * 3. SHEET_ID를 본인 Google Sheets ID로 교체
+ * 3. SHEET_ID, ADMIN_EMAIL을 본인 값으로 교체
  * 4. 배포 → 새 배포 → 웹앱
  *    - 실행 계정: 나
  *    - 액세스 권한: 모든 사용자 (익명)
@@ -12,10 +12,15 @@
  */
 
 const SHEET_ID   = 'YOUR_GOOGLE_SHEET_ID'; // ← 교체 필요
-const SHEET_NAME = '고객DB';               // 시트 이름 (없으면 자동 생성)
+const SHEET_NAME = '고객DB';
+const ADMIN_EMAIL = 'YOUR_ADMIN_EMAIL@gmail.com'; // ← 알림 받을 이메일로 교체
 
 // 헤더 컬럼 순서
-const HEADERS = ['제출일시', '이름', '전화번호', '이메일', '관심 제품/수업', '문의사항', '동의여부'];
+const HEADERS = [
+  '제출일시', '이름', '전화번호', '이메일',
+  '관심 제품/수업', '문의사항', '동의여부',
+  'UTM Source', 'UTM Medium', 'UTM Campaign',
+];
 
 function doPost(e) {
   try {
@@ -28,7 +33,6 @@ function doPost(e) {
     if (!sheet) {
       sheet = ss.insertSheet(SHEET_NAME);
       sheet.appendRow(HEADERS);
-      // 헤더 스타일
       const headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
       headerRange.setBackground('#1a73e8');
       headerRange.setFontColor('#ffffff');
@@ -38,14 +42,20 @@ function doPost(e) {
 
     // 데이터 추가
     sheet.appendRow([
-      data.timestamp || new Date().toLocaleString('ko-KR'),
-      data.name      || '',
-      data.phone     || '',
-      data.email     || '',
-      data.interest  || '',
-      data.message   || '',
-      data.consent   || '',
+      data.timestamp    || new Date().toLocaleString('ko-KR'),
+      data.name         || '',
+      data.phone        || '',
+      data.email        || '',
+      data.interest     || '',
+      data.message      || '',
+      data.consent      || '',
+      data.utmSource    || '',
+      data.utmMedium    || '',
+      data.utmCampaign  || '',
     ]);
+
+    // 관리자 이메일 알림 발송
+    sendAdminAlert(data);
 
     return ContentService
       .createTextOutput(JSON.stringify({ result: 'success' }))
@@ -58,7 +68,33 @@ function doPost(e) {
   }
 }
 
-// GET 요청 테스트용 (배포 후 URL 직접 열 때 확인)
+function sendAdminAlert(data) {
+  const utmInfo = [data.utmSource, data.utmMedium, data.utmCampaign]
+    .filter(Boolean).join(' / ');
+
+  const body = `
+새로운 관심 고객이 등록되었습니다.
+
+■ 제출일시 : ${data.timestamp}
+■ 이름     : ${data.name}
+■ 전화번호 : ${data.phone}
+■ 이메일   : ${data.email || '(미입력)'}
+■ 관심 항목: ${data.interest}
+■ 문의사항 : ${data.message || '(없음)'}
+■ 유입 경로: ${utmInfo || '(직접 접속)'}
+
+Google Sheets에서 전체 목록을 확인하세요.
+https://docs.google.com/spreadsheets/d/${SHEET_ID}
+`.trim();
+
+  GmailApp.sendEmail(
+    ADMIN_EMAIL,
+    `[관심고객 등록] ${data.name} (${data.phone})`,
+    body
+  );
+}
+
+// GET 요청 테스트용
 function doGet() {
   return ContentService
     .createTextOutput('Apps Script 웹앱이 정상 동작 중입니다.')

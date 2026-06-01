@@ -5,11 +5,19 @@
  */
 
 // ── 설정 ──────────────────────────────────────────────
-// Google Apps Script 웹앱 배포 URL을 여기에 입력하세요.
-// 배포 방법은 README.md를 참고하세요.
 const APPS_SCRIPT_URL = (typeof process !== 'undefined' && process.env && process.env.APPS_SCRIPT_URL)
   ? process.env.APPS_SCRIPT_URL
   : 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // ← 실제 URL로 교체
+
+// ── UTM 파라미터 수집 ──────────────────────────────────
+function getUtmParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    utmSource:   params.get('utm_source')   || '',
+    utmMedium:   params.get('utm_medium')   || '',
+    utmCampaign: params.get('utm_campaign') || '',
+  };
+}
 
 // ── 전화번호 자동 포맷 ─────────────────────────────────
 function formatPhone(value) {
@@ -193,6 +201,7 @@ form.addEventListener('submit', async (e) => {
     interest:    interestValue,
     message:     messageInput.value.trim(),
     consent:     consentInput.checked ? '동의' : '미동의',
+    ...getUtmParams(),
   };
 
   try {
