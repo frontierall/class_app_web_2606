@@ -51,7 +51,7 @@ const validators = {
     return '';
   },
   message(value) {
-    if (value.length > 500) return '문의사항은 500자 이내로 입력해 주세요.';
+    if (value.length > 300) return '문의사항은 300자 이내로 입력해 주세요.';
     return '';
   },
   consent(checked) {
@@ -150,9 +150,9 @@ interestCustom.addEventListener('blur', () => {
 messageInput.addEventListener('input', () => {
   const len = messageInput.value.length;
   charCurrent.textContent = len;
-  if (len > 500) {
-    messageInput.value = messageInput.value.slice(0, 500);
-    charCurrent.textContent = 500;
+  if (len > 300) {
+    messageInput.value = messageInput.value.slice(0, 300);
+    charCurrent.textContent = 300;
   }
   setError('group-message', validators.message(messageInput.value));
 });
