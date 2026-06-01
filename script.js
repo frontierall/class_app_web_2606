@@ -60,6 +60,22 @@ const validators = {
   },
 };
 
+// ── 개인정보 토글 ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const toggleBtn  = document.getElementById('privacy-toggle-btn');
+  const toggleBody = document.getElementById('privacy-body');
+
+  toggleBtn.addEventListener('click', () => {
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+    toggleBtn.setAttribute('aria-expanded', String(!isExpanded));
+    if (isExpanded) {
+      toggleBody.hidden = true;
+    } else {
+      toggleBody.hidden = false;
+    }
+  });
+});
+
 // ── DOM 참조 ───────────────────────────────────────────
 const form          = document.getElementById('contact-form');
 const successMsg    = document.getElementById('success-message');
